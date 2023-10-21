@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.authenticate.belajar.jwt.JwtGenerate;
+import com.authenticate.belajar.models.ErrorResponse;
 import com.authenticate.belajar.models.Token;
 // import com.authenticate.belajar.jwt.TokenResponse;
 import com.authenticate.belajar.models.User;
@@ -66,25 +67,36 @@ public class UserService {
 
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody User user) {
-        String email = user.getEmail();
-        User user2 = userRepository.getUserbyEmail(email);
+        try {
+            String email = user.getEmail();
+            User user2 = userRepository.getUserbyEmail(email);
 
-        if (user2 != null) {
-            String passwordResponse = user2.getPassword();
-            String password = user.getPassword();
+            if (user2 != null) {
+                String passwordResponse = user2.getPassword();
+                String password = user.getPassword();
 
-            if (BCrypt.checkpw(password, passwordResponse)) {
-                String token = jwtGenerate.generateToken(user2.getId());
-                Token tokenModel = new Token();
-                tokenModel.setToken(token);
+                if (BCrypt.checkpw(password, passwordResponse)) {
+                    String token = jwtGenerate.generateToken(user2.getId());
+                    Token tokenModel = new Token();
+                    tokenModel.setToken(token);
 
-                // Include the token in the response
-                return ResponseEntity.ok(tokenModel);
+                    // Include the token in the response
+                    return ResponseEntity.ok(tokenModel);
+                }
+            }else{
+                ErrorResponse errorResponse = new ErrorResponse();
+                errorResponse.setMessage("User Not Found");
+                errorResponse.setHttpStatus("401");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
             }
-        }
 
-        // If the user is not found or authentication fails, return a 401 Unauthorized response.
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+            return null;
+        } catch (Exception e) {
+            ErrorResponse errorResponse = new ErrorResponse();
+            errorResponse.setMessage("User Not Found");
+            errorResponse.setHttpStatus("401");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
     }
 
     @PostMapping("/user/authenticate")
