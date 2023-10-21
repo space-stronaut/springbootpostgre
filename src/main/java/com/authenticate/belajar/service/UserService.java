@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.authenticate.belajar.jwt.JwtGenerate;
-import com.authenticate.belajar.jwt.TokenResponse;
+import com.authenticate.belajar.models.Token;
+// import com.authenticate.belajar.jwt.TokenResponse;
 import com.authenticate.belajar.models.User;
 import com.authenticate.belajar.repository.UserRepository;
 
@@ -74,9 +75,11 @@ public class UserService {
 
             if (BCrypt.checkpw(password, passwordResponse)) {
                 String token = jwtGenerate.generateToken(user2.getId());
+                Token tokenModel = new Token();
+                tokenModel.setToken(token);
 
                 // Include the token in the response
-                return ResponseEntity.ok(token);
+                return ResponseEntity.ok(tokenModel);
             }
         }
 
@@ -92,7 +95,7 @@ public class UserService {
             String claims = jwtGenerate.parserToken(token);
 
             String userId = claims;
-            
+
             User response = userRepository.getUserById(userId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
